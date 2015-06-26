@@ -14,17 +14,45 @@ import sys
 from time import strftime, localtime 
 
 
-from gen_class import gen
 
+sys.path.append('/Users/Oli/work/python/minions')
+
+from log_file_setup import log_files
+# from analysis_modules import data
+from log_file_setup import Tee
+import matplotlib.pyplot as plt
+from gen_class import gen
+from data_import import imp
+from plotter_class import plotter
+from ana_data import ana_data
+from ana_res import ana_res
+from plotter import *
+from csv_list_class import csv_list
+
+
+
+
+
+a = ana_data()
+ar = ana_res()
 g = gen()
-# from numpy import array,frombuffer,dtype
+l = log_files()
+i = imp() 
+p = plotter()
+hp = histplot()
+c  =csv_list()
+
+
+
+
 
 pflag = 1
 # Class for setting up the file structure 
 
 class fn:
     # sets root directory and tests writing permission
-    def set_start_directory(self,direc):
+    def set_start_directory(self,direc,pflag):
+        g.tprinter('Running set_start_directory',pflag)
         
         self.c_dir = direc
 #         self.c_dir = os.getcwd()
@@ -62,18 +90,54 @@ class fn:
     # prints the current directory
     def p_dir(self):
         print os.getcwd()
+    
+    
+    
+    def converter(self,flag,aflag,pflag):
+        g.tprinter('Running converter',pflag)
+        
+        if aflag != 'force':
+            g.printer('aflag != force',pflag)
+            g.printer('looking for f_list',pflag)
+            
+            self.f_list=c.csv_file_loader(self.c_dir,'f_list.csv',pflag)
+        
+        else:
+            g.printer('aflag == force',pflag)
+        
+        if c.list_ok == 0:
+            g.printer('c.list_ok =0, creating f_list',pflag)
+            self.create_f_list(flag, pflag)
+        
+        else:
+            pass
+        
+        
+        g.printer('sving f_list',pflag)
+        c.csv_file_saver(self.c_dir,'f_list.csv',self.f_list,1,pflag)
+        g.printer('f_list saved',pflag)
+        
+        
+        
+            
+        
+        
+        
         
     # lists the .trc files in ...
-    def create_f_list(self,flag):
+    def create_f_list(self,flag,pflag):
+        
+        g.tprinter('Running create_f_list',pflag)
+            
         
         os.chdir(self.start)
         self.f_list = []
-        # ...in the rot directory and ALL sub directories
+        # ...in the root directory and ALL sub directories
         if flag =='all':
             for (path, dirs, files) in os.walk(self.start):
                 for ii in files:
                     if ii.endswith(".trc"):
-                        self.f_list.append([path,ii])
+                        self.f_list.append([0,path,ii])
             self.f_list_flag = 1
             self.out = 'decoding all files, sub directories'
             g.printer(self.out,pflag)
@@ -91,7 +155,7 @@ class fn:
     def write_test(self):
         self.flag_writing_test = 1
         for i in self.f_list:
-            os.chdir(i[0])
+            os.chdir(i[1])
             try:
                 open('test.p','w+')
                 os.remove('test.p')
@@ -139,8 +203,23 @@ class fn:
         return self.f_list
     
     # calculates the number of total runs and dumps it into run_total.p file
-    def run_total(self):
-        self.run_total=len(self.f_list)
+    def run_total(self,pflag):
+        g.tprinter('Running run_total',pflag)
+        self.run_total= 0 
+        print self.f_list
+        try:
+            self.f_list [0]
+        except:
+            g.printer('There is a problem with f_list',pflag)
+            sys.exit('script stop') 
+        for i in self.f_list:
+            print i
+            if i[0] == 0:
+                self.run_total += 1
+            else:
+                pass 
+            
+        g.printer('number of files to be converted '+str(self.run_total),pflag)
         pickle.dump(self.run_total, open('run_total.p','w+'))
 
         return self.run_total
@@ -178,12 +257,15 @@ class fn:
             os.mkdir(self.log_path) 
         if os.path.exists(self.raw_data_path) is not True:
             os.mkdir(self.raw_data_path) 
+        
+        g.printer('infra structure ok',pflag)
             
             
     
     # creates a log file in the root directory where all the output during the decoding is written
     # no data or parameters are written into this file     
-    def log_file_set(self,name):
+    def log_file_set(self,name,pflag):
+        g.tprinter('Running log_file_set',pflag)
         self.creat_time = strftime("%Y%m%d_%H%M", localtime())
         self.log_file_path=os.path.join(self.log_path,str(name)+'_'+self.creat_time+'.txt')
         print self.log_file_path
@@ -200,7 +282,7 @@ class fn:
         print >> self.log_file, 'current directory: '+str(self.c_dir)
         print >> self.log_file, 'root directory: '+str(self.start)
         print >> self.log_file, ''
-        print >> self.log_file, self.out
+#         print >> self.log_file, self.out
         print >> self.log_file, ''
         
         
@@ -491,9 +573,9 @@ class data_descriptor():
 #         global run_total
 
         # directory from the f_list 
-        self.direc = f_list[0]
+        self.direc = f_list[1]
         # .trc file from the f_list
-        self.file_name = f_list[1]
+        self.file_name = f_list[2]
         
         # changes to the given start directory
         os.chdir(str(start))
