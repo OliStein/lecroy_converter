@@ -1,0 +1,7 @@
+# git ignore file 
+# by Oliver Stein 
+# oliver.stein@cern.ch
+#
+# 26.06.2015
+
+*.pyc
