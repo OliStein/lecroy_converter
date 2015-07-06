@@ -12,6 +12,7 @@ import StringIO
 import pickle
 import sys
 from time import strftime, localtime 
+import numpy as np
 
 
 
@@ -96,24 +97,42 @@ class fn:
     def converter(self,flag,aflag,pflag):
         g.tprinter('Running converter',pflag)
         
+        self.f_list = np.array(self.create_f_list(flag, pflag))
+        
         if aflag != 'force':
             g.printer('aflag != force',pflag)
             g.printer('looking for f_list',pflag)
             
-            self.f_list=c.csv_file_loader(self.c_dir,'f_list.csv',pflag)
+            self.l_list = np.array(c.csv_file_loader(self.c_dir,'f_list.csv',pflag))
+#             print self.l_list
+            for i in self.f_list:
+#                 print i[-1]
+#                 print self.l_list
+                    
+                if i[-1] in self.l_list:
+                    g.printer(str(i[-1]),pflag)
+                    g.printer('i is in list',pflag)
+                
+#                         g.printer(str[i]+' is in list',pflag)
+                else:
+                    g.printer(str(i),pflag)
+                    g.printer('i is NOT in list',pflag)
+                    g.printer('add i to list',pflag)
+                    self.l_list=np.append(self.l_list,[i],axis =0)
+                    print self.l_list
+#                         g.printer('Add '+str[i]+' to list',pflag)
+            self.f_list = self.l_list       
         
         else:
             g.printer('aflag == force',pflag)
         
-        if c.list_ok == 0:
-            g.printer('c.list_ok =0, creating f_list',pflag)
-            self.create_f_list(flag, pflag)
-        
-        else:
-            pass
         
         
-        g.printer('sving f_list',pflag)
+        
+        
+        
+        print self.f_list
+        g.printer('saving f_list',pflag)
         c.csv_file_saver(self.c_dir,'f_list.csv',self.f_list,1,pflag)
         g.printer('f_list saved',pflag)
         
@@ -131,13 +150,13 @@ class fn:
             
         
         os.chdir(self.start)
-        self.f_list = []
+        self.f_list_n = []
         # ...in the root directory and ALL sub directories
         if flag =='all':
             for (path, dirs, files) in os.walk(self.start):
                 for ii in files:
                     if ii.endswith(".trc"):
-                        self.f_list.append([0,path,ii])
+                        self.f_list_n.append(['0',path,ii])
             self.f_list_flag = 1
             self.out = 'decoding all files, sub directories'
             g.printer(self.out,pflag)
@@ -145,12 +164,12 @@ class fn:
         else:
             for files in os.listdir("."):
                 if files.endswith(".trc"):
-                    self.f_list.append([self.start,files])
+                    self.f_list_n.append([self.start,files])
             self.f_list_flag = 0   
             self.out = 'decoding files only in root directory'  
             g.printer(self.out,pflag)   
             
-        return self.f_list
+        return self.f_list_n
     
     def write_test(self):
         self.flag_writing_test = 1
@@ -214,7 +233,7 @@ class fn:
             sys.exit('script stop') 
         for i in self.f_list:
             print i
-            if i[0] == 0:
+            if i[0] == '0':
                 self.run_total += 1
             else:
                 pass 

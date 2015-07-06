@@ -93,10 +93,14 @@ fn.run_check()
 '''Converts the .trc files listed in f_list'''    
 
 for i in fn.f_list:
-    if i[0] == 0:
+    print i
+    print i[0]
+    if i[0] == '0':
         g.printer('Running converter',pflag)
         d.data_convert(cwd,i,fn.data_path,fn.param_path,fn.raw_data_path)
+        
         i[0] = 1
+        print i
     else:
         g.printer('Skip data',pflag)
 # while fn.run_number_load() < fn.run_total_load(): 
