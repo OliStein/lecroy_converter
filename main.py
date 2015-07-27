@@ -9,6 +9,7 @@ Created on 24 May 2013
 @author: ostein
 '''
 import sys
+import os
 from modules import fn
 from modules import data_descriptor
 from modules import Tee
@@ -54,9 +55,12 @@ c  =csv_list()
 
 pflag = 1
 # Oliver's mac path
-cwd = '/Users/Oli/work/dBLM_readout/IP2/data/' 
+cwd = '/Users/Oli/work/dBLM_readout/IP2/data/20150727_data_sets/waverunner1/' 
 # fn.set_start_directory('C:\\work\\diamonds\\data\\store\\UFOs')
-fn.set_start_directory(cwd,pflag)
+data_path = os.path.join(cwd,'raw_data')
+ar.ana_res_path = cwd
+
+fn.set_start_directory(os.path.join(cwd,'raw_data'),pflag)
 fn.start_direc()
 fn.create_infra_struc(cwd,pflag)
 
@@ -73,9 +77,43 @@ sys.stdout = Tee(sys.stdout, f)
 '''all: searches for .trc files  in root AND sub directories'''
 '''only: searches for .trc files ONLY in root'''
 flag = 'all'
-# aflag = 'force'
-aflag = '0'
-fn.converter(flag,aflag,pflag)
+
+# fflag = '1'
+fflag = '1'
+
+# # aflag = 'force'
+# aflag = '0'
+
+
+
+header = [['analysed','file_name','file_name_path']]
+
+ar.ana_file_name_set('conv',pflag)
+
+# sets the header
+ar.header_set(header,pflag)
+    
+# sets data path
+ar.data_path_set(data_path,pflag)
+    
+# checks for ana_file
+ar.check_for_ana_file(ar.ana_res_path,fflag,pflag)
+    
+# creates a list of .trc files in the current cwd directory
+ar.data_list_creator('trc',pflag)
+    
+# updates the ana_file by adding only new files from data_list to the ana_file
+ar.ana_file_updater(pflag)
+    
+# saves the ana_file
+ar.ana_file_saver(1,pflag)
+
+# sys.exit('stop')
+
+fn.f_list = ar.ana_file
+
+print fn.f_list
+# fn.converter(flag,aflag,pflag)
 # fn.create_f_list(flag,pflag)
 
 # sys.exit('script stop')
@@ -83,10 +121,10 @@ fn.converter(flag,aflag,pflag)
 
 fn.run_total(pflag)
 fn.run_number_reset()
-
-
-fn.write_test()
-fn.run_check()
+# 
+# 
+# fn.write_test()
+# fn.run_check()
 
 # sys.exit('script stop')
 
@@ -95,7 +133,7 @@ fn.run_check()
 for i in fn.f_list:
     print i
     print i[0]
-    if i[0] == '0':
+    if i[0] == 0:
         g.printer('Running converter',pflag)
         d.data_convert(cwd,i,fn.data_path,fn.param_path,fn.raw_data_path)
         

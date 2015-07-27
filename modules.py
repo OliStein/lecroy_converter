@@ -97,13 +97,23 @@ class fn:
     def converter(self,flag,aflag,pflag):
         g.tprinter('Running converter',pflag)
         
-        self.f_list = np.array(self.create_f_list(flag, pflag))
+        
+        
+        self.create_f_list(flag, pflag)
+#         self.f_list = np.array(self.create_f_list(flag, pflag))
         
         if aflag != 'force':
             g.printer('aflag != force',pflag)
             g.printer('looking for f_list',pflag)
             
             self.l_list = np.array(c.csv_file_loader(self.c_dir,'f_list.csv',pflag))
+            
+            if c.list_ok == 0:
+                g.printer('no l_list loaded',pflag)
+                self.l_list = np.array([['Path','file name']])
+                g.printer(str(self.l_list),pflag)
+            else:
+                pass
 #             print self.l_list
             for i in self.f_list:
 #                 print i[-1]
@@ -118,7 +128,12 @@ class fn:
                     g.printer(str(i),pflag)
                     g.printer('i is NOT in list',pflag)
                     g.printer('add i to list',pflag)
-                    self.l_list=np.append(self.l_list,[i],axis =0)
+                    g.printer('length i '+str(len(i)),pflag)
+                    g.printer('dimensions i '+str(np.shape(i)),pflag)
+                    g.printer('dimensions l_list '+str(np.shape(self.l_list)),pflag)
+#                     self.l_list=np.append(self.l_list,np.array([i]),axis =0)
+#                     self.l_list=self.l_list.append(i)
+                    self.l_list=np.vstack([self.l_list,np.array(i)])
                     print self.l_list
 #                         g.printer('Add '+str[i]+' to list',pflag)
             self.f_list = self.l_list       
@@ -149,27 +164,48 @@ class fn:
         g.tprinter('Running create_f_list',pflag)
             
         
-        os.chdir(self.start)
-        self.f_list_n = []
-        # ...in the root directory and ALL sub directories
-        if flag =='all':
-            for (path, dirs, files) in os.walk(self.start):
-                for ii in files:
-                    if ii.endswith(".trc"):
-                        self.f_list_n.append(['0',path,ii])
-            self.f_list_flag = 1
-            self.out = 'decoding all files, sub directories'
-            g.printer(self.out,pflag)
-        # ...in the root directory 
-        else:
-            for files in os.listdir("."):
-                if files.endswith(".trc"):
-                    self.f_list_n.append([self.start,files])
-            self.f_list_flag = 0   
-            self.out = 'decoding files only in root directory'  
-            g.printer(self.out,pflag)   
-            
-        return self.f_list_n
+        
+        f = os.listdir(self.start)
+        g.printer(self.start,pflag)
+        g.printer(str(f),pflag)
+        k = []
+        
+        ident = '.trc'
+        
+        for i in f:
+            g.printer(str(i),pflag)
+            if i.endswith(str(ident)):
+#                 k.append([os.path.join(self.path,i),i])
+                k.append([os.path.join(self.data_path,i),i])
+#                 k.append(i)
+#             print k
+        
+        g.printer('Length data_list: '+str(len(k)),pflag)
+        
+        self.f_list=k        
+        
+        
+#         os.chdir(self.start)
+#         self.f_list_n = []
+#         # ...in the root directory and ALL sub directories
+#         if flag =='all':
+#             for (path, dirs, files) in os.walk(self.start):
+#                 for ii in files:
+#                     if ii.endswith(".trc"):
+#                         self.f_list_n.append(['0',path,ii])
+#             self.f_list_flag = 1
+#             self.out = 'decoding all files, sub directories'
+#             g.printer(self.out,pflag)
+#         # ...in the root directory 
+#         else:
+#             for files in os.listdir("."):
+#                 if files.endswith(".trc"):
+#                     self.f_list_n.append([self.start,files])
+#             self.f_list_flag = 0   
+#             self.out = 'decoding files only in root directory'  
+#             g.printer(self.out,pflag)   
+#             
+#         return self.f_list_n
     
     def write_test(self):
         self.flag_writing_test = 1
@@ -592,9 +628,9 @@ class data_descriptor():
 #         global run_total
 
         # directory from the f_list 
-        self.direc = f_list[1]
+        self.direc = f_list[2]
         # .trc file from the f_list
-        self.file_name = f_list[2]
+        self.file_name = f_list[1]
         
         # changes to the given start directory
         os.chdir(str(start))
@@ -631,7 +667,7 @@ class data_descriptor():
         print 'start converting'     
         
         print 'set directory to: '+str(self.direc)
-        os.chdir(self.direc)
+#         os.chdir(self.direc)
         
         global offset1      # from beginning of the file to the descriptor WAVEDES           
         global count1       # count variable
@@ -647,7 +683,8 @@ class data_descriptor():
         print 'try to open input file'
         self.flag1 = 1
         try:        
-            self.file = open(self.file_name)
+            self.file = open(self.direc)  
+#             self.file = open(self.file_name)
             print 'done'
         except:
             print 'file does not exist, abort'
